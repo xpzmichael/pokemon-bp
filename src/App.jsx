@@ -1,39 +1,45 @@
-// src/App.jsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 
-// Import Data
-import { POKEMON_DB, STANDARD_SEQUENCE, TYPE_TRANSLATIONS, TYPE_COLORS } from './data/constants';
+import { STANDARD_SEQUENCE, TYPE_TRANSLATIONS, TYPE_COLORS } from './data/constants';
 import { DICTIONARY } from './data/dictionary';
+import POKEMON_DB from './data/pokemon.json'; 
 
-// Import Components
 import PokemonCard from './components/PokemonCard';
 import SetupScreen from './components/SetupScreen';
 import DraftHeader from './components/DraftHeader';
 import TeamPanel from './components/TeamPanel';
 
 export default function App() {
-  const [appState, setAppState] = useState('setup'); // 'setup' | 'draft'
+  const [appState, setAppState] = useState('setup'); 
   const [config, setConfig] = useState({ allowMirror: false, sequence: STANDARD_SEQUENCE });
-  const [lang, setLang] = useState('en'); // 'en' | 'zh'
+  
+  // 1. AUTO-DETECT LANGUAGE
+  const [lang, setLang] = useState(() => {
+    // Check browser language setting
+    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    return browserLang.startsWith('zh') ? 'zh' : 'en';
+  });
+  
   const t = DICTIONARY[lang];
 
-  // Draft State
+  // 2. DYNAMIC TITLE CHANGE
+  useEffect(() => {
+    document.title = t.title;
+  }, [lang, t.title]);
+
   const [stepIndex, setStepIndex] = useState(0);
   const [bans, setBans] = useState({ A: [], B: [] });
   const [picks, setPicks] = useState({ A: [], B: [] });
   
-  // UI State
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState(null);
 
-  // Derived Logic
   const currentTurn = config.sequence[stepIndex] || { side: null, action: 'complete' };
   const isComplete = stepIndex >= config.sequence.length;
   const activeSide = currentTurn.side; 
   const activeAction = currentTurn.action;
 
-  // Calculate limits for rendering empty slots
   const totalSlots = useMemo(() => {
     return {
       picksA: config.sequence.filter(s => s.side === 'A' && s.action === 'pick').length,
@@ -43,16 +49,13 @@ export default function App() {
     };
   }, [config.sequence]);
 
-  // Computed Sets for Fast Lookup
   const allBannedIds = useMemo(() => new Set([...bans.A, ...bans.B].map(p => p.id)), [bans]);
   const pickedAIds = useMemo(() => new Set(picks.A.map(p => p.id)), [picks.A]);
   const pickedBIds = useMemo(() => new Set(picks.B.map(p => p.id)), [picks.B]);
   const allPickedIds = useMemo(() => new Set([...picks.A, ...picks.B].map(p => p.id)), [picks]);
 
-  // Handlers
   const handleStartDraft = (newConfig) => {
     setConfig(newConfig);
-    // Reset draft state
     setStepIndex(0);
     setBans({ A: [], B: [] });
     setPicks({ A: [], B: [] });
@@ -71,22 +74,15 @@ export default function App() {
     if (isComplete) return;
 
     if (activeAction === 'ban') {
-      setBans(prev => ({
-        ...prev,
-        [activeSide]: [...prev[activeSide], pokemon]
-      }));
+      setBans(prev => ({ ...prev, [activeSide]: [...prev[activeSide], pokemon] }));
     } else {
-      setPicks(prev => ({
-        ...prev,
-        [activeSide]: [...prev[activeSide], pokemon]
-      }));
+      setPicks(prev => ({ ...prev, [activeSide]: [...prev[activeSide], pokemon] }));
     }
     
     setSearch('');
     setStepIndex(prev => prev + 1);
   };
 
-  // Helper: Status of a specific Pokemon
   const getPokemonStatus = (pid) => {
     if (allBannedIds.has(pid)) return 'banned';
     if (pickedAIds.has(pid)) return 'picked-A';
@@ -94,43 +90,37 @@ export default function App() {
     return 'available';
   };
 
-  // Helper: Is a Pokemon clickable?
   const isPokemonDisabled = (pid) => {
     if (isComplete) return true;
     const status = getPokemonStatus(pid);
-    
-    // Always disabled if banned
     if (status === 'banned') return true;
     
-    // Logic for Picking
     if (activeAction === 'pick') {
       if (config.allowMirror) {
-        // In mirror mode, can pick unless I already have it
         return activeSide === 'A' ? pickedAIds.has(pid) : pickedBIds.has(pid);
       } else {
-        // In normal mode, cannot pick if anyone has picked it
         return allPickedIds.has(pid);
       }
     }
-    
-    // Logic for Banning: Cannot ban if already picked or banned
     return allPickedIds.has(pid); 
   };
 
-  // Filter List
   const POKEMON_TYPES = Object.keys(TYPE_TRANSLATIONS.en);
   
   const filteredPokemon = useMemo(() => {
+    if (!POKEMON_DB) return [];
+
     return POKEMON_DB.filter(p => {
-      const matchesSearch = p.name[lang].toLowerCase().includes(search.toLowerCase());
+      const nameEn = p.name?.en || '';
+      const nameZh = p.name?.zh || '';
+      
+      const matchesSearch = nameEn.toLowerCase().includes(search.toLowerCase()) || 
+                            nameZh.includes(search);
       const matchesType = filterType ? p.types.includes(filterType) : true;
       return matchesSearch && matchesType;
     });
   }, [search, filterType, lang]);
 
-
-  // -- RENDER --
-  
   if (appState === 'setup') {
     return <SetupScreen onStart={handleStartDraft} initialConfig={config} lang={lang} setLang={setLang} />;
   }
@@ -145,10 +135,7 @@ export default function App() {
         setLang={setLang} 
       />
 
-      {/* Main Content Area - Constrained to Viewport Height */}
       <main className="flex-1 max-w-[1600px] mx-auto w-full p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0 overflow-hidden">
-        
-        {/* Left Team (Blue) - Desktop */}
         <div className="hidden lg:block lg:col-span-3 h-full">
           <TeamPanel 
             side="A" 
@@ -162,13 +149,9 @@ export default function App() {
           />
         </div>
 
-        {/* Center Arena */}
         <div className="lg:col-span-6 flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          
-          {/* Action Status Bar (Fixed Height) */}
           <div className={`transition-all duration-300 flex flex-col justify-center items-center p-4 shrink-0
             ${isComplete ? 'bg-purple-600 py-6' : activeSide === 'A' ? 'bg-blue-600 py-4' : 'bg-red-600 py-4'}`}>
-            
             <div className="text-white text-center">
               {isComplete ? (
                 <>
@@ -189,7 +172,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Controls (Fixed Height) */}
           <div className="p-4 border-b border-gray-100 space-y-3 bg-white z-10 shadow-sm shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -202,7 +184,6 @@ export default function App() {
               />
             </div>
             
-            {/* Type Filter */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               <button 
                 onClick={() => setFilterType(null)}
@@ -226,7 +207,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Grid - Flexible Height & Scrollable */}
           <div className="flex-1 overflow-y-auto p-4 bg-gray-50/50 min-h-0">
              {filteredPokemon.length === 0 ? (
                <div className="h-full flex flex-col items-center justify-center text-gray-400">
@@ -250,7 +230,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Right Team (Red) - Desktop */}
         <div className="hidden lg:block lg:col-span-3 h-full">
            <TeamPanel 
             side="B" 
@@ -264,7 +243,6 @@ export default function App() {
           />
         </div>
 
-        {/* Mobile Team Views */}
         <div className="lg:hidden grid grid-cols-2 gap-4 h-64 shrink-0">
            <TeamPanel 
             side="A" name={t.blueTeam} bans={bans.A} picks={picks.A} 
@@ -281,7 +259,6 @@ export default function App() {
             lang={lang}
           />
         </div>
-
       </main>
     </div>
   );

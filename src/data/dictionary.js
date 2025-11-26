@@ -1,8 +1,7 @@
-// src/data/dictionary.js
 
 export const DICTIONARY = {
   en: {
-    title: "Kanto Showdown",
+    title: "Pokémon BP",
     blueTeam: "Blue Team",
     redTeam: "Red Team",
     picks: "Picks",
@@ -10,7 +9,7 @@ export const DICTIONARY = {
     searchPlaceholder: "Search Pokémon...",
     allTypes: "All",
     settings: "Settings",
-    mirrorMatch: "Mirror Matches",
+    mirrorMatch: "Allow Mirror",
     mirrorDesc: "Allow duplicate picks",
     draftSeq: "Draft Sequence",
     presets: "Presets",
@@ -40,15 +39,15 @@ export const DICTIONARY = {
     acting: "ACTING"
   },
   zh: {
-    title: "关都对决",
-    blueTeam: "蓝队",
-    redTeam: "红队",
+    title: "宝可梦 BP",
+    blueTeam: "雄性沙奈朵队",
+    redTeam: "闪光母怪力队",
     picks: "选用",
     bans: "禁用",
     searchPlaceholder: "搜索宝可梦...",
     allTypes: "全部",
     settings: "设置",
-    mirrorMatch: "镜像模式",
+    mirrorMatch: "重复选取",
     mirrorDesc: "允许重复选用宝可梦",
     draftSeq: "BP 流程",
     presets: "预设模式",
@@ -69,12 +68,12 @@ export const DICTIONARY = {
     presetShort: "快速 3v3",
     presetShortDesc: "快速对战模式",
     presetChaos: "Ban位 优先",
-    presetChaosDesc: "大量禁用位",
+    presetChaosDesc: "超多Ban位",
     confirmReset: "返回设置？当前的进度将丢失。",
-    blueBan: "蓝队禁用",
-    redBan: "红队禁用",
-    bluePick: "蓝队选用",
-    redPick: "红队选用",
+    blueBan: "雄性沙奈朵队禁用",
+    redBan: "闪光母怪力队禁用",
+    bluePick: "雄性沙奈朵队选用",
+    redPick: "闪光母怪力队选用",
     acting: "行动中"
   }
 };
