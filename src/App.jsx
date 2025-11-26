@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Filter } from 'lucide-react';
 
@@ -12,18 +13,19 @@ import TeamPanel from './components/TeamPanel';
 
 export default function App() {
   const [appState, setAppState] = useState('setup'); 
-  const [config, setConfig] = useState({ allowMirror: false, sequence: STANDARD_SEQUENCE });
   
-  // 1. AUTO-DETECT LANGUAGE
+  // Initial Config
+  const [config, setConfig] = useState({ allowMirror: false, sequence: [...STANDARD_SEQUENCE] });
+  
+  // Auto-detect language
   const [lang, setLang] = useState(() => {
-    // Check browser language setting
+    if (typeof navigator === 'undefined') return 'en';
     const browserLang = navigator.language || navigator.userLanguage || 'en';
     return browserLang.startsWith('zh') ? 'zh' : 'en';
   });
   
   const t = DICTIONARY[lang];
 
-  // 2. DYNAMIC TITLE CHANGE
   useEffect(() => {
     document.title = t.title;
   }, [lang, t.title]);
@@ -83,10 +85,17 @@ export default function App() {
     setStepIndex(prev => prev + 1);
   };
 
+  // Fix 1: Handle "Picked by Both" visual state
   const getPokemonStatus = (pid) => {
     if (allBannedIds.has(pid)) return 'banned';
-    if (pickedAIds.has(pid)) return 'picked-A';
-    if (pickedBIds.has(pid)) return 'picked-B';
+    
+    const isA = pickedAIds.has(pid);
+    const isB = pickedBIds.has(pid);
+
+    if (isA && isB) return 'picked-both';
+    if (isA) return 'picked-A';
+    if (isB) return 'picked-B';
+    
     return 'available';
   };
 
@@ -113,7 +122,6 @@ export default function App() {
     return POKEMON_DB.filter(p => {
       const nameEn = p.name?.en || '';
       const nameZh = p.name?.zh || '';
-      
       const matchesSearch = nameEn.toLowerCase().includes(search.toLowerCase()) || 
                             nameZh.includes(search);
       const matchesType = filterType ? p.types.includes(filterType) : true;

@@ -7,11 +7,15 @@ const PokemonCard = ({ pokemon, status, onClick, disabled, lang }) => {
   const isBanned = status === 'banned';
   const isPicked = status && status.startsWith('picked');
   const pickedBy = status === 'picked-A' ? 'A' : status === 'picked-B' ? 'B' : null;
+  const isBoth = status === 'picked-both';
 
   let cardClass = "relative group cursor-pointer transition-all duration-200 rounded-xl p-2 flex flex-col items-center border-2 ";
   
   if (isBanned) {
     cardClass += "bg-gray-200 border-gray-300 opacity-60 grayscale cursor-not-allowed";
+  } else if (isBoth) {
+    // Visual style for "Picked by Both"
+    cardClass += "bg-gradient-to-r from-blue-100 to-red-100 border-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]";
   } else if (isPicked) {
     cardClass += pickedBy === 'A' 
       ? "bg-blue-100 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" 
@@ -24,7 +28,7 @@ const PokemonCard = ({ pokemon, status, onClick, disabled, lang }) => {
 
   return (
     <div 
-      onClick={() => !disabled && !isBanned && !isPicked && onClick(pokemon)} 
+      onClick={() => !disabled && !isBanned && onClick(pokemon)} 
       className={cardClass}
     >
       <div className="text-xs font-bold text-gray-400 absolute top-1 left-2">#{String(pokemon.id).padStart(3, '0')}</div>
