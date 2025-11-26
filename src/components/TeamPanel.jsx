@@ -1,6 +1,7 @@
 import React from 'react';
 import { Swords, ShieldBan, X } from 'lucide-react';
-import { TYPE_COLORS, getSpriteUrl } from '../data/constants';
+import { TYPE_COLORS} from '../data/constants';
+import { getSpriteUrl } from '../utils/spriteHelper';
 import { DICTIONARY } from '../data/dictionary';
 
 const TeamPanel = ({ side, name, bans, picks, active, totalPickSlots, totalBanSlots, lang }) => {

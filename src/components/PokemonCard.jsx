@@ -1,7 +1,8 @@
 // src/components/PokemonCard.jsx
 import React from 'react';
 import { ShieldBan } from 'lucide-react';
-import { TYPE_COLORS, TYPE_TRANSLATIONS, getSpriteUrl } from '../data/constants';
+import { TYPE_COLORS, TYPE_TRANSLATIONS} from '../data/constants';
+import { getSpriteUrl } from '../utils/spriteHelper';
 
 const PokemonCard = ({ pokemon, status, onClick, disabled, lang }) => {
   const isBanned = status === 'banned';
